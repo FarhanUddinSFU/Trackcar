@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:id="@+id/main"
+    android:layout_height="match_parent">
+
+    <Button
+        android:id="@+id/garageButton"
+        android:layout_width="245dp"
+        android:layout_height="71dp"
+        android:layout_marginBottom="20dp"
+        android:backgroundTint="@color/black"
+        android:drawableLeft="@drawable/baseline_garage_24"
+        android:onClick="myGarageClicked"
+        android:text="My Garage"
+        app:layout_constraintBottom_toTopOf="@+id/reminderButton"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <Button
+        android:id="@+id/reminderButton"
+        android:layout_width="245dp"
+        android:drawableLeft="@drawable/baseline_checklist_24"
+        android:backgroundTint="@color/black"
+        android:layout_height="71dp"
+        android:layout_marginBottom="28dp"
+        android:text="Reminders"
+        app:layout_constraintBottom_toTopOf="@+id/helpButton"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <Button
+        android:id="@+id/helpButton"
+        android:layout_width="245dp"
+        android:backgroundTint="@color/black"
+        android:layout_height="71dp"
+        android:drawableLeft="@drawable/baseline_help_24"
+        android:layout_marginBottom="20dp"
+        android:text="Help"
+        app:layout_constraintBottom_toTopOf="@+id/googleMapsButtom"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <Button
+        android:id="@+id/googleMapsButtom"
+        android:layout_width="245dp"
+        android:layout_height="71dp"
+        android:backgroundTint="@color/black"
+        android:drawableLeft="@drawable/baseline_map_24"
+        android:layout_marginBottom="216dp"
+        android:text="Gooogle Maps"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+</androidx.constraintlayout.widget.ConstraintLayout>
