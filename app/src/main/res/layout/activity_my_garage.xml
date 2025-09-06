@@ -52,6 +52,7 @@
         android:layout_marginTop="80dp"
         android:backgroundTint="@color/black"
         android:drawableTop="@drawable/baseline_add_24"
+        android:onClick="addCar"
         android:text="Add Vehicle"
         app:layout_constraintBottom_toTopOf="@+id/CarsTitle"
         app:layout_constraintStart_toStartOf="parent"

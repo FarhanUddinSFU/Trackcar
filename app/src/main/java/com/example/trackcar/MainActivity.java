@@ -14,6 +14,7 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+//Android programming is event driven programming so when events happen we call the appropriate handler to complete the request if nothing is happening its just sitting in idle
 public class MainActivity extends AppCompatActivity {
     private FirebaseAuth mAuth;
     @Override
@@ -53,6 +54,11 @@ public class MainActivity extends AppCompatActivity {
     //MainActivity -> create_user
     public void createUser(View V){
         Intent i = new Intent(this, create_user.class);
+        startActivity(i);
+    }
+    //Main Activity -> forgot_password
+    public void forgotPasscode(View V){
+        Intent i = new Intent(this, forgot_password.class);
         startActivity(i);
     }
 }
