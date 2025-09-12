@@ -8,7 +8,9 @@ import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.EditText;
 import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
@@ -17,6 +19,8 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.example.trackcar.Car;
+import com.example.trackcar.questionare;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -32,20 +36,23 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class add_car extends AppCompatActivity {
     private static final String TAG = "AddCarActivity";
-
-    private Spinner Car_year, Car_make, Car_model, Car_trim;
-    // Will save and store users car info in firebase, car_id helps look up more details of the car
-    private String chosen_year, chosen_make, chosen_model, chose_trim, car_id;
-
+    private Spinner Car_year, Car_make, Car_model;
+    //The vin number is used to look up specific details such as trim, engine cyl, mpg, hp and more
+    private EditText Car_vin;
+    private String carVinNumber = null;
+    // Will save and store users car info in firebase with basic info coming from spinners and full details coming from vin lookup
+    private String chosen_year, chosen_make, chosen_model;
+    ArrayList<String> fullCarDetails;
+    private boolean vinEnteredSuccess = false;
     // The following is commonly used in AS to help run tasks on different threads to update UI safely
     private ExecutorService executor = Executors.newSingleThreadExecutor(); // Executes complex tasks such as API calls on new background thread
     private Handler handler = new Handler(Looper.getMainLooper()); // Android does not allow UI updates from background threads. Bring back to main thread to update UI
-
     //Used to save basic car info to firebase database
     private FirebaseAuth mAuth;
     private FirebaseFirestore userDb;
@@ -64,51 +71,26 @@ public class add_car extends AppCompatActivity {
         Car_year = findViewById(R.id.car_year);
         Car_make = findViewById(R.id.car_make);
         Car_model = findViewById(R.id.car_model);
-        Car_trim = findViewById(R.id.car_trim);
+        Car_vin = findViewById(R.id.vin_input);
+
         //Instantiate Firebase access
         mAuth = FirebaseAuth.getInstance();
         userDb = FirebaseFirestore.getInstance();
-        // First find car years range provided from CarQuery
+
+        //Instantiate the array that will contain all the car details
+        fullCarDetails = new ArrayList<>();
+
         // We first populate the years spinner with valid years
-        executor.execute(() -> {
-            try {
-                // **How we do it**
-                // 1: We first secure a connection with the URL that will return us the JSON data
-                // 2: We read in via input and buffer reader
-                // 3: We convert the 0 and 1s to a readable strings (done by returnJSONString function) which will then be converted to JSONObjects and JSONArrays
-                // 4: Lastly we add the data we need from the JSON Objects or arrays to an ArrayList and attach it to our spinner using ArrayAdapter class (done in the dataToSpinners function)
+        ArrayList<String> years = new ArrayList<>();
+        int currentYear = Calendar.getInstance().get(Calendar.YEAR); // Get current year
 
-                String APIUrl = "https://www.carqueryapi.com/api/0.3/?cmd=getYears"; // The url we will make an API call from
-                String jsonStr = returnJSONString(APIUrl);
-                JSONObject obj = new JSONObject(jsonStr);
-                JSONObject yearsObj;
+        for (int year = 1960; year <= currentYear; year++) {
+            years.add(String.valueOf(year));
+        }
+        dataToSpinners(years,Car_year);
 
-                try {
-                    yearsObj = obj.getJSONObject("Years");
-                } catch (JSONException e) {
-                    // Sometimes API returns "Years" as a string instead of an object
-                    yearsObj = new JSONObject(obj.getString("Years"));
-                }
 
-                int minYear = yearsObj.getInt("min_year");
-                int maxYear = yearsObj.getInt("max_year");
-
-                // Generate list of years using the extracted JSON strings
-                ArrayList<String> yearList = new ArrayList<>();
-                for (int y = maxYear; y >= minYear; y--) { // descending order
-                    yearList.add(String.valueOf(y));
-                }
-
-                // Update Spinner on main thread safely using ArrayAdapter (very common in Android Studio)
-                handler.post(() -> dataToSpinners(yearList, Car_year));
-
-            } catch (IOException | JSONException e) {
-                Log.e(TAG, "Failed to load years", e);
-                handler.post(() -> Toast.makeText(this, "Failed to load years", Toast.LENGTH_SHORT).show());
-            }
-        });
-
-        // If user selects a year perform this listener and save the year chosen then populate the make spinner
+        // If user selects a year perform this listener and save the year chosen then populate the Car_make spinner
         Car_year.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
@@ -124,7 +106,7 @@ public class add_car extends AppCompatActivity {
             }
         });
 
-        // If user selects a year and make perform this listener and save the make chosen then populate the model spinner
+        // If user selects a year and make perform this listener and save the make_chosen then populate the Car_model spinner
         Car_make.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
@@ -137,94 +119,19 @@ public class add_car extends AppCompatActivity {
             public void onNothingSelected(AdapterView<?> adapterView) {}
         });
 
-        // When user selects the year, make, and model last thing is to get the trim and also save the trim ID
-        // so we can get more details such as HP and MPG later using a different API call
+        // When user selects the year, make, and model last thing is to save all info and get the VIN number and get remaining details
+        // so we can get more details such as HP and MPG later using a our VIN API lookup
         Car_model.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
                 chosen_model = adapterView.getItemAtPosition(i).toString();
-                // We want to populate the trim spinner with basic details
-                getCarTrims();
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> adapterView) {}
-        });
-
-        //Once the trim level is selected we have all the basic car data
-        Car_trim.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                chose_trim = adapterView.getItemAtPosition(i).toString();
             }
 
             @Override
             public void onNothingSelected(AdapterView<?> adapterView) {}
         });
     }
-    // Gets all car makes available for the selected year
-    void getCarMakes() {
-        executor.execute(() -> {
-            try {
-                // Try and secure a connection with the API to get list of makes from that year
-                String APIUrl = "https://www.carqueryapi.com/api/0.3/?callback=?&cmd=getMakes&year=" + chosen_year;
-                String jsonStr = returnJSONString(APIUrl);
-                JSONObject json = new JSONObject(jsonStr);
-                JSONArray car_makes = json.getJSONArray("Makes");
-                ArrayList<String> make_ids = new ArrayList<>();
-                for (int i = 0; i < car_makes.length(); i++) {
-                    JSONObject current_car = car_makes.getJSONObject(i);
-                    make_ids.add(current_car.getString("make_display"));
-                }
-                // Update Spinner on main thread safely using ArrayAdapter
-                handler.post(() -> dataToSpinners(make_ids, Car_make));
-            } catch (IOException | JSONException e) {
-                Log.e(TAG, "Failed to load car makes", e);
-                handler.post(() -> Toast.makeText(this, "Failed to load car makes", Toast.LENGTH_SHORT).show());
-            }
-        });
-    }
-    // Gets the car models to populate the spinner
-    void getCarModel() {
-        executor.execute(() -> {
-            try {
-                String APIUrl = "https://www.carqueryapi.com/api/0.3/?callback=?&cmd=getModels&make=" + chosen_make + "&year=" + chosen_year;
-                String jsonStr = returnJSONString(APIUrl);
-                JSONObject json = new JSONObject(jsonStr);
-                JSONArray modelsList = json.getJSONArray("Models");
-                ArrayList<String> models = new ArrayList<>();
-                for (int i = 0; i < modelsList.length(); i++) {
-                    JSONObject current_model = modelsList.getJSONObject(i);
-                    models.add(current_model.getString("model_name"));
-                }
-                handler.post(() -> dataToSpinners(models, Car_model));
-            } catch (IOException | JSONException e) {
-                Log.e(TAG, "Failed to load car models", e);
-                handler.post(() -> Toast.makeText(this, "Failed to load car models", Toast.LENGTH_SHORT).show());
-            }
-        });
-    }
-    // Gets trims for the selected year/make/model
-    void getCarTrims() {
-        executor.execute(() -> {
-            try {
-                // We want to receive basic trim details from this API call
-                String APIUrl = "https://www.carqueryapi.com/api/0.3/?cmd=getTrims&make=" + chosen_make + "&model=" + chosen_model + "&year=" + chosen_year + "&full_results=0";
-                String jsonStrCleaned = returnJSONString(APIUrl);
-                JSONObject json = new JSONObject(jsonStrCleaned);
-                JSONArray trimsFromJSON = json.getJSONArray("Trims");
-                ArrayList<String> vehicleTrims = new ArrayList<>();
-                for (int i = 0; i < trimsFromJSON.length(); i++) {
-                    JSONObject currentTrim = trimsFromJSON.getJSONObject(i);
-                    vehicleTrims.add(currentTrim.getString("model_trim") + " [ID: " + currentTrim.getString("model_id") + "]");
-                }
-                handler.post(() -> dataToSpinners(vehicleTrims, Car_trim));
-            } catch (IOException | JSONException e) {
-                Log.e(TAG, "Failed to load car trims", e);
-                handler.post(() -> Toast.makeText(this, "Failed to load car trims", Toast.LENGTH_SHORT).show());
-            }
-        });
-    }
+
     // Used to attach ArrayList data to spinners
     void dataToSpinners(ArrayList<String> dataList, Spinner spinnerToPopulate) {
         ArrayAdapter<String> adapter = new ArrayAdapter<>(add_car.this,
@@ -232,6 +139,7 @@ public class add_car extends AppCompatActivity {
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinnerToPopulate.setAdapter(adapter);
     }
+
     // Function that handles the actual network call and returns the JSON string
     String returnJSONString(String APIURl) throws IOException {
         String jsonStrCleaned = "";
@@ -262,27 +170,125 @@ public class add_car extends AppCompatActivity {
         }
         return jsonStrCleaned;
     }
+
+    // Gets all car makes available for the selected year
+    void getCarMakes() {
+        executor.execute(() -> {
+            try {
+                // Try and secure a connection with the API to get list of makes from that year
+                String APIUrl = "https://vpic.nhtsa.dot.gov/api/vehicles/GetMakesForVehicleType/car?format=json"; // The url we will make an API call from
+                String jsonStr = returnJSONString(APIUrl);
+                Log.d("jsonStr", jsonStr);
+                JSONObject car_json = new JSONObject(jsonStr);
+                JSONArray car_makes = car_json.getJSONArray("Results");
+                ArrayList<String> make_ids = new ArrayList<>();
+                for (int i = 0; i < car_makes.length(); i++) {
+                    JSONObject current_car = car_makes.getJSONObject(i);
+                    make_ids.add(current_car.getString("MakeName"));
+                }
+                // Update Spinner on main thread safely using ArrayAdapter
+                handler.post(() -> dataToSpinners(make_ids, Car_make));
+            } catch (IOException | JSONException e) {
+                Log.e(TAG, "Failed to load car makes", e);
+                handler.post(() -> Toast.makeText(this, "Failed to load car makes", Toast.LENGTH_SHORT).show());
+            }
+        });
+    }
+
+    // Gets the car models to populate the spinner
+    void getCarModel() {
+        executor.execute(() -> {
+            try {
+                String APIUrl = "https://vpic.nhtsa.dot.gov/api/vehicles/getmodelsformakeyear/make/"+chosen_make+"/modelyear/"+chosen_year+"?format=json";
+                String jsonStr = returnJSONString(APIUrl);
+                JSONObject json = new JSONObject(jsonStr);
+                JSONArray modelsList = json.getJSONArray("Results");
+                ArrayList<String> models = new ArrayList<>();
+                for (int i = 0; i < modelsList.length(); i++) {
+                    JSONObject current_model = modelsList.getJSONObject(i);
+                    models.add(current_model.getString("Model_Name"));
+                }
+                handler.post(() -> dataToSpinners(models, Car_model));
+            } catch (IOException | JSONException e) {
+                Log.e(TAG, "Failed to load car models", e);
+                handler.post(() -> Toast.makeText(this, "Failed to load car models", Toast.LENGTH_SHORT).show());
+            }
+        });
+    }
+    //When the next button is clicked on add_car activity signalling that we're done
     public void createCarObject(View V){
         ArrayList<String> basicDetails = new ArrayList<>();
-        if(!chosen_year.isEmpty() && !chosen_make.isEmpty() && !chosen_model.isEmpty() && !chose_trim.isEmpty()) {
+        if(!chosen_year.isEmpty() && !chosen_make.isEmpty() && !chosen_model.isEmpty()) {
             basicDetails.add(chosen_year);
             basicDetails.add(chosen_make);
             basicDetails.add(chosen_model);
-            basicDetails.add(chose_trim);
+            //Elements from the basicDetails ArrayList will fill in the basic attributes in the car object
             Car car = new Car(basicDetails);
+
+            //Add additional car details if a VIN number was provided
+
+            if(vinEnteredSuccess == true){
+                car.setTrim(fullCarDetails.get(0).toString().trim());
+                car.setEngine_cyl(fullCarDetails.get(1).toString().trim());
+                car.setEngine_fuel(fullCarDetails.get(2).toString().trim());
+                car.setEngine_drive(fullCarDetails.get(3).toString().trim());
+                car.setEngine_hp(fullCarDetails.get(4).toString().trim());
+            }
+            //Add the newly made car object to the users firebase database
             FirebaseUser user = mAuth.getCurrentUser();
             userDb.collection("Users").document(user.getUid())
                     .collection("Vehicles").add(car)
                     .addOnSuccessListener(aVoid -> {
-                        Toast.makeText(this, "Basic info stored", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, "Info stored", Toast.LENGTH_SHORT).show();
+                        Intent i = new Intent(this, questionare.class);
+                        startActivity(i);
                     })
                     .addOnFailureListener(e -> {
                         Toast.makeText(this, "Failed to save Car: " + e.getMessage(), Toast.LENGTH_LONG).show();
                     });
-            Intent i = new Intent(this, questionare.class);
-            startActivity(i);
         } else {
             Toast.makeText(this,"All fields must be chosen", Toast.LENGTH_LONG).show();
         }
+    }
+    public void vinClicked(View V)  {
+        //When the vin is submitted get the rest of car details
+        executor.execute(()->{
+            try{
+                carVinNumber = Car_vin.getText().toString().trim();
+                String APIURL = "https://vpic.nhtsa.dot.gov/api/vehicles/DecodeVinValues/"+carVinNumber+"?format=json";
+                String jsonStr = returnJSONString(APIURL);
+                JSONObject json = new JSONObject(jsonStr);
+                JSONArray vinDetails = json.getJSONArray("Results");
+                //First index will hold the trim
+                //Second index will hold the mpg
+                if (vinDetails.length() > 0) {
+                    JSONObject car = vinDetails.getJSONObject(0);
+
+                    // Extract values safely
+                    String trim = car.optString("Trim", "N/A");
+                    String cyl = car.optString("EngineCylinders", "N/A");
+                    String fuel = car.optString("FuelTypePrimary", "N/A");
+                    String drive = car.optString("DriveType", "N/A");
+                    String hp = car.optString("EngineHP", "N/A");
+
+                    // Add to array list in this order we will later save to the Car object
+                    handler.post(() -> {
+                        fullCarDetails.clear(); // Clear old details if any
+                        fullCarDetails.add(trim);
+                        fullCarDetails.add(cyl);
+                        fullCarDetails.add(fuel);
+                        fullCarDetails.add(drive);
+                        fullCarDetails.add(hp);
+                        vinEnteredSuccess = true;
+                        Toast.makeText(add_car.this, "VIN details loaded", Toast.LENGTH_SHORT).show();
+                    });
+                }
+            }catch (JSONException e) {
+                throw new RuntimeException(e);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
+
     }
 }

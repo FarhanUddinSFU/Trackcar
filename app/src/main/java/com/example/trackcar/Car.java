@@ -8,18 +8,23 @@ public class Car {
     private String year;
     private String make;
     private String model;
+
+    //The additional info will be displayed and sometimes used to calculate maintnence intervals
+    private String engine_cyl;
+    private String engine_fuel;
+    private String engine_hp;
+    private String engine_drive;
     private String trim;
-    private String model_id;    //Used to get more details on car from the API
     public Car(ArrayList<String> basic_deatils){
+        //If no vin is provided we can still add basic details
         this.year = basic_deatils.get(0).toString();
         this.make = basic_deatils.get(1).toString();
         this.model = basic_deatils.get(2).toString();
-        String trim = basic_deatils.get(3).toString();
-
-        int trimEnds = trim.indexOf("[");
-        int modelIdBegins = trim.indexOf(":");
-        this.trim = trim.substring(0, trimEnds);
-        this.model_id = trim.substring(modelIdBegins+1,trim.length()-1).trim();
+        this.engine_cyl = null;
+        this.engine_fuel = null;
+        this.engine_hp = null;
+        this.engine_drive = null;
+        this.trim = null;
     }
 
     //Setters and Getters
@@ -56,11 +61,35 @@ public class Car {
         this.trim = trim;
     }
 
-    public String getModel_id() {
-        return model_id;
+    public String getEngine_cyl() {
+        return engine_cyl;
     }
 
-    public void setModel_id(String model_id) {
-        this.model_id = model_id;
+    public void setEngine_cyl(String engine_cyl) {
+        this.engine_cyl = engine_cyl;
+    }
+
+    public String getEngine_fuel() {
+        return engine_fuel;
+    }
+
+    public void setEngine_fuel(String engine_fuel) {
+        this.engine_fuel = engine_fuel;
+    }
+
+    public String getEngine_hp() {
+        return engine_hp;
+    }
+
+    public void setEngine_hp(String engine_hp) {
+        this.engine_hp = engine_hp;
+    }
+
+    public String getEngine_drive() {
+        return engine_drive;
+    }
+
+    public void setEngine_drive(String engine_drive) {
+        this.engine_drive = engine_drive;
     }
 }

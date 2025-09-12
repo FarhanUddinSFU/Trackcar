@@ -2,6 +2,7 @@ package com.example.trackcar;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
@@ -46,6 +47,7 @@ public class MainActivity extends AppCompatActivity {
                     startActivity(i);
                     finish();
                 } else {
+                    Log.d("login failed", task.getException().getMessage());
                     Toast.makeText(this, "Login failed: " + task.getException().getMessage(), Toast.LENGTH_LONG).show();
                 }
             });
