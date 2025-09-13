@@ -10,7 +10,6 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.Spinner;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
@@ -19,8 +18,6 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
-import com.example.trackcar.Car;
-import com.example.trackcar.questionare;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -228,11 +225,11 @@ public class add_car extends AppCompatActivity {
             //Add additional car details if a VIN number was provided
 
             if(vinEnteredSuccess == true){
-                car.setTrim(fullCarDetails.get(0).toString().trim());
-                car.setEngine_cyl(fullCarDetails.get(1).toString().trim());
-                car.setEngine_fuel(fullCarDetails.get(2).toString().trim());
-                car.setEngine_drive(fullCarDetails.get(3).toString().trim());
-                car.setEngine_hp(fullCarDetails.get(4).toString().trim());
+                car.setTrim(fullCarDetails.get(0).trim());
+                car.setEngine_cyl(fullCarDetails.get(1).trim());
+                car.setEngine_fuel(fullCarDetails.get(2).trim());
+                car.setEngine_drive(fullCarDetails.get(3).trim());
+                car.setEngine_hp(fullCarDetails.get(4).trim());
             }
             //Add the newly made car object to the users firebase database
             FirebaseUser user = mAuth.getCurrentUser();

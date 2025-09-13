@@ -1,6 +1,5 @@
 package com.example.trackcar;
 
-import android.widget.Toast;
 
 import java.util.ArrayList;
 
@@ -15,11 +14,11 @@ public class Car {
     private String engine_hp;
     private String engine_drive;
     private String trim;
-    public Car(ArrayList<String> basic_deatils){
+    public Car(ArrayList<String> basic_details){
         //If no vin is provided we can still add basic details
-        this.year = basic_deatils.get(0).toString();
-        this.make = basic_deatils.get(1).toString();
-        this.model = basic_deatils.get(2).toString();
+        this.year = basic_details.get(0);
+        this.make = basic_details.get(1);
+        this.model = basic_details.get(2);
         this.engine_cyl = null;
         this.engine_fuel = null;
         this.engine_hp = null;
