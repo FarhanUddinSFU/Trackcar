@@ -29,6 +29,7 @@ import org.json.JSONObject;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.Serializable;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -224,25 +225,31 @@ public class add_car extends AppCompatActivity {
 
             //Add additional car details if a VIN number was provided
 
-            if(vinEnteredSuccess == true){
+            if(vinEnteredSuccess == true) {
                 car.setTrim(fullCarDetails.get(0).trim());
                 car.setEngine_cyl(fullCarDetails.get(1).trim());
                 car.setEngine_fuel(fullCarDetails.get(2).trim());
                 car.setEngine_drive(fullCarDetails.get(3).trim());
                 car.setEngine_hp(fullCarDetails.get(4).trim());
+
+                //Add the newly made car object to the users firebase database
+                FirebaseUser user = mAuth.getCurrentUser();
+                userDb.collection("Users").document(user.getUid())
+                        .collection("Vehicles").add(car)
+                        .addOnSuccessListener(documentReference -> {
+                            Toast.makeText(this, "Info stored", Toast.LENGTH_SHORT).show();
+                            Intent i = new Intent(this, questionare.class);
+                            i.putExtra("carID", documentReference.getId());
+                            Toast.makeText(this, documentReference.getId(), Toast.LENGTH_LONG).show();
+                            startActivity(i);
+                        })
+                        .addOnFailureListener(e -> {
+                            Toast.makeText(this, "Failed to save Car: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                        });
             }
-            //Add the newly made car object to the users firebase database
-            FirebaseUser user = mAuth.getCurrentUser();
-            userDb.collection("Users").document(user.getUid())
-                    .collection("Vehicles").add(car)
-                    .addOnSuccessListener(aVoid -> {
-                        Toast.makeText(this, "Info stored", Toast.LENGTH_SHORT).show();
-                        Intent i = new Intent(this, questionare.class);
-                        startActivity(i);
-                    })
-                    .addOnFailureListener(e -> {
-                        Toast.makeText(this, "Failed to save Car: " + e.getMessage(), Toast.LENGTH_LONG).show();
-                    });
+            else{
+                Toast.makeText(this,"Please enter a VIN number", Toast.LENGTH_LONG).show();
+            }
         } else {
             Toast.makeText(this,"All fields must be chosen", Toast.LENGTH_LONG).show();
         }

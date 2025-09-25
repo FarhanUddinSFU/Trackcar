@@ -14,6 +14,11 @@ public class Car {
     private String engine_hp;
     private String engine_drive;
     private String trim;
+
+
+    private int currentKM;
+    private int averageKMYearly;
+    private int averageKMMonthly;
     public Car(ArrayList<String> basic_details){
         //If no vin is provided we can still add basic details
         this.year = basic_details.get(0);
@@ -90,5 +95,28 @@ public class Car {
 
     public void setEngine_drive(String engine_drive) {
         this.engine_drive = engine_drive;
+    }
+    public int getCurrentKM() {
+        return currentKM;
+    }
+
+    public void setCurrentKM(int currentKM) {
+        this.currentKM = currentKM;
+    }
+
+    public int getAverageKMYearly() {
+        return averageKMYearly;
+    }
+
+    public void setAverageKMYearly(int averageKMYearly) {
+        this.averageKMYearly = averageKMYearly;
+    }
+
+    public int getAverageKMMonthly() {
+        return averageKMMonthly;
+    }
+
+    public void setAverageKMMonthly(int averageKMMonthly) {
+        this.averageKMMonthly = averageKMMonthly;
     }
 }
