@@ -4,11 +4,13 @@ package com.example.trackcar;
 import java.util.ArrayList;
 
 public class Car {
+    //vehicleID is generated at random when car is added to firebase
+    private String vehicleId;
     private String year;
     private String make;
     private String model;
 
-    //The additional info will be displayed and sometimes used to calculate maintnence intervals
+    //The additional info will be displayed and sometimes used to calculate maintenance intervals
     private String engine_cyl;
     private String engine_fuel;
     private String engine_hp;
@@ -19,6 +21,7 @@ public class Car {
     private int currentKM;
     private int averageKMYearly;
     private int averageKMMonthly;
+
     public Car(ArrayList<String> basic_details){
         //If no vin is provided we can still add basic details
         this.year = basic_details.get(0);
@@ -30,6 +33,12 @@ public class Car {
         this.engine_drive = null;
         this.trim = null;
     }
+    //Used to update the currentKm daily even when the app isn't open.
+    //The changing KM will be used to set off reminder functions
+    public void updateCurrentKM(){
+
+    }
+    public Car(){}
 
     //Setters and Getters
 
@@ -39,6 +48,13 @@ public class Car {
 
     public void setYear(String year) {
         this.year = year;
+    }
+    public String getVehicleId() {
+        return vehicleId;
+    }
+
+    public void setVehicleId(String vehicleId) {
+        this.vehicleId = vehicleId;
     }
 
     public String getMake() {

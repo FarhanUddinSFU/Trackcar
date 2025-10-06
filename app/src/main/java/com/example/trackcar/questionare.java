@@ -26,6 +26,8 @@ public class questionare extends AppCompatActivity {
     private EditText averageMonth;
     private FirebaseAuth mAuth;
     private FirebaseFirestore userDb;
+
+    private String engineCyl;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -38,6 +40,7 @@ public class questionare extends AppCompatActivity {
         });
         //We will add the additional data to the exact vehicle user is adding
         carID = getIntent().getStringExtra("carID");
+        engineCyl = getIntent().getStringExtra("engineCYl");
         currentKm = findViewById(R.id.currentKmInput);
         averageYear = findViewById(R.id.yearlyKmInput);
         averageMonth = findViewById(R.id.monthlyAverageInput);
@@ -46,49 +49,52 @@ public class questionare extends AppCompatActivity {
 
     }
 
-    public void saveData(View v){
-        //Basically validating the data the user has entered
+    public void saveData(View v) {
         String km = currentKm.getText().toString().trim();
         String averageYearly = averageYear.getText().toString().trim();
         String averageMonthly = averageMonth.getText().toString().trim();
-        // Check if current KM is entered
+
         if (km.isEmpty()) {
             Toast.makeText(this, "Please enter current KM", Toast.LENGTH_LONG).show();
             return;
         }
-        // Check that **at least one** of yearly or monthly is entered
         if (averageYearly.isEmpty() && averageMonthly.isEmpty()) {
             Toast.makeText(this, "Please enter either yearly or monthly average KM", Toast.LENGTH_LONG).show();
             return;
         }
-        int kmNum;
-        int averageYearlyNum;
-        int averageMonthlyNum;
+
         try {
-            kmNum = Integer.parseInt(km);  // Will throw NumberFormatException if not a valid number
-            averageYearlyNum = Integer.parseInt(averageYearly);
-            averageMonthlyNum = Integer.parseInt(averageMonthly);
-            if(kmNum < 0 || averageMonthlyNum < 0 || averageYearlyNum < 0){
-                Toast.makeText(this, "Please enter a valid number", Toast.LENGTH_SHORT).show();
+            int kmNum = Integer.parseInt(km);
+            int averageYearlyNum = averageYearly.isEmpty() ? 0 : Integer.parseInt(averageYearly);
+            int averageMonthlyNum = averageMonthly.isEmpty() ? 0 : Integer.parseInt(averageMonthly);
+
+            if (kmNum < 0 || averageYearlyNum < 0 || averageMonthlyNum < 0) {
+                Toast.makeText(this, "Please enter valid positive numbers", Toast.LENGTH_SHORT).show();
+                return;
             }
-            // valid number
+
+            Map<String, Object> updates = new HashMap<>();
+            updates.put("currentKM", kmNum);
+            updates.put("averageKMYearly", averageYearlyNum);
+            updates.put("averageKMMonthly", averageMonthlyNum);
+
+            userDb.collection("Users").document(mAuth.getUid())
+                    .collection("Vehicles").document(carID)
+                    .update(updates)
+                    .addOnSuccessListener(aVoid -> {
+                        Toast.makeText(this, "Details updated!", Toast.LENGTH_SHORT).show();
+                        Intent i = new Intent(this, oilChangeDetails.class);
+                        i.putExtra("carID", carID);
+                        i.putExtra("currentKm", kmNum);
+                        i.putExtra("engineCyl", engineCyl);
+                        startActivity(i);
+                    })
+                    .addOnFailureListener(e -> {
+                        Toast.makeText(this, "Failed to update details: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                    });
+
         } catch (NumberFormatException e) {
             Toast.makeText(this, "Please enter valid numbers", Toast.LENGTH_SHORT).show();
-            return;  // stop execution if input is invalid
         }
-        Map<String, Object> updates = new HashMap<>();
-        updates.put("currentKM", kmNum);
-        updates.put("averageKMYearly", averageYearlyNum);
-        updates.put("averageKMMonthly", averageMonthlyNum);
-
-        userDb.collection("Users").document(mAuth.getUid())
-                .collection("Vehicles").document(carID)
-                .update(updates)  // updates with all in the updates map
-                .addOnSuccessListener(aVoid -> {
-                    Toast.makeText(this, "Details updated!", Toast.LENGTH_SHORT).show();
-                })
-                .addOnFailureListener(e -> {
-                    Toast.makeText(this, "Failed to update details: " + e.getMessage(), Toast.LENGTH_LONG).show();
-                });
     }
 }

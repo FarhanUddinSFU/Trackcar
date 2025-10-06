@@ -9,6 +9,7 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.Toast;
 
@@ -44,6 +45,7 @@ public class add_car extends AppCompatActivity {
     //The vin number is used to look up specific details such as trim, engine cyl, mpg, hp and more
     private EditText Car_vin;
     private String carVinNumber = null;
+    private ImageView carImage;
     // Will save and store users car info in firebase with basic info coming from spinners and full details coming from vin lookup
     private String chosen_year, chosen_make, chosen_model;
     ArrayList<String> fullCarDetails;
@@ -238,13 +240,17 @@ public class add_car extends AppCompatActivity {
                         .collection("Vehicles").add(car)
                         .addOnSuccessListener(documentReference -> {
                             Toast.makeText(this, "Info stored", Toast.LENGTH_SHORT).show();
+                            String uid = documentReference.getId();
+                            documentReference.update("vehicleId", uid);
                             Intent i = new Intent(this, questionare.class);
                             i.putExtra("carID", documentReference.getId());
+                            i.putExtra("engineCYl",car.getEngine_cyl());
                             Toast.makeText(this, documentReference.getId(), Toast.LENGTH_LONG).show();
                             startActivity(i);
                         })
                         .addOnFailureListener(e -> {
                             Toast.makeText(this, "Failed to save Car: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                            Log.d("failed to save car", e.getMessage());
                         });
             }
             else{
@@ -253,6 +259,11 @@ public class add_car extends AppCompatActivity {
         } else {
             Toast.makeText(this,"All fields must be chosen", Toast.LENGTH_LONG).show();
         }
+    }
+    //When user wants to add an image of his car he will click this add button
+    public void addImage(View v){
+        carImage = findViewById(R.id.imageView1);
+
     }
     public void vinClicked(View V)  {
         //When the vin is submitted get the rest of car details
