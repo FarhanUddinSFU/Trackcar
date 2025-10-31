@@ -1,20 +1,18 @@
 package com.example.trackcar;
-import android.app.NotificationChannel;
-import android.app.NotificationManager;
+
 import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
 import androidx.work.Worker;
 import androidx.work.WorkerParameters;
 
-import com.example.trackcar.maintenanceInfo;
-import com.example.trackcar.maintenanceRecord;
+
 import com.google.android.gms.tasks.Tasks;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QuerySnapshot;
 import java.util.Date;
-import java.util.List;
+
 
 public class carOilChangeWorker extends Worker {
 

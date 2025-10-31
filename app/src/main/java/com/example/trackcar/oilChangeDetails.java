@@ -1,5 +1,6 @@
 package com.example.trackcar;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -15,7 +16,6 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
-import com.google.firebase.Firebase;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -181,6 +181,9 @@ public class oilChangeDetails extends AppCompatActivity {
         }).addOnFailureListener(a->{
             Toast.makeText(this, "failed to add info", Toast.LENGTH_LONG).show();
             Log.d("Failed to add maintenance info", a.getMessage().toString());
+
         });
+        Intent i = new Intent(this, my_garage.class);
+        startActivity(i);
     }
 }

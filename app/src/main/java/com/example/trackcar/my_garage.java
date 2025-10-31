@@ -80,7 +80,7 @@ public class my_garage extends AppCompatActivity {
                     }
 
                     // Create adapter & attach to RecyclerView
-                    carAdapter = new CarAdapter(carsInGarage);
+                    carAdapter = new CarAdapter(this,carsInGarage);
                     recyclerView.setAdapter(carAdapter);
 
                 })

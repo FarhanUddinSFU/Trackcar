@@ -1,9 +1,10 @@
 package com.example.trackcar;
 
 
+import java.io.Serializable;
 import java.util.ArrayList;
 
-public class Car {
+public class Car implements Serializable {
     //vehicleID is generated at random when car is added to firebase
     private String vehicleId;
     private String year;

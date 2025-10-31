@@ -11,16 +11,18 @@ public class maintenanceInfo {
     private int engineAirFilterChange;
     private int brakeFluidChange;
     private int tireRotation;
+    private int lastTireRotation;
     private int timingBeltInterval;
     private int coolant;
-
     private int currentKm;
-
     private double nextOilChange;
 
     public maintenanceInfo(String vehicleId, String user){
         this.vehicleId =
         this.userId = user;
+    };
+    public maintenanceInfo(){
+
     };
     //Simply used to compute the oil change interval given the data of the car
     public void setNextOilChange(){
@@ -77,7 +79,17 @@ public class maintenanceInfo {
     public void setBrakePadInterval(int brakePadInterval) {
         this.brakePadInterval = brakePadInterval;
     }
+    public void setNextOilChange(double nextOilChange) {
+        this.nextOilChange = nextOilChange;
+    }
 
+    public int getLastTireRotation() {
+        return lastTireRotation;
+    }
+
+    public void setLastTireRotation(int lastTireRotation) {
+        this.lastTireRotation = lastTireRotation;
+    }
     public int getBrakeRotorInterval() {
         return brakeRotorInterval;
     }
