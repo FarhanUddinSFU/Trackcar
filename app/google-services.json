@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "988544041368",
+    "project_id": "trackcar-5b8a0",
+    "storage_bucket": "trackcar-5b8a0.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:988544041368:android:6ab22af0a018cd93d8abed",
+        "android_client_info": {
+          "package_name": "com.example.trackcar"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDM4bfF-AoJ0x1URU3iVlNLJXMXkpUZD9Q"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
